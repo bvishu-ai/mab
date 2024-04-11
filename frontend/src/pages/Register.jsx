@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios"; // Import Axios
 import { useSpeechRecognition } from "react-speech-recognition"; // Import useSpeechRecognition
@@ -21,27 +21,47 @@ function Register() {
   const { transcript, resetTranscript } = useSpeechRecognition();
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  const handleVoiceInput = (field) => {
+  const fields = ["firstname", "lastname", "userEmail", "userName", "password", "age", "gender"];
+  const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
+  const [isGenderEntered, setIsGenderEntered] = useState(false);
+  const [spokenFields, setSpokenFields] = useState({});
+  const [allFieldsFilled, setAllFieldsFilled] = useState(false);
+
+  const handleVoiceInput = () => {
     resetTranscript();
     const recognition = new SpeechRecognition();
     recognition.start();
     recognition.onresult = (event) => {
       const voiceInput = event.results[0][0].transcript;
-      setFormDetails({ ...formDetails, [field]: voiceInput });
+      setFormDetails({ ...formDetails, [fields[currentFieldIndex]]: voiceInput });
       recognition.stop();
+      if (currentFieldIndex < fields.length - 1) {
+        setCurrentFieldIndex(currentFieldIndex + 1);
+      } else {
+        setIsGenderEntered(true);
+      }
     };
+  };
+
+  const speakInstructions = (field) => {
+    if (!spokenFields[field]) {
+      const instructions = `Please say your ${field}.`;
+      const speech = new SpeechSynthesisUtterance();
+      speech.text = instructions;
+      speechSynthesis.speak(speech);
+      setSpokenFields({ ...spokenFields, [field]: true });
+    }
   };
 
   const inputChange = (e) => {
     const { name, value } = e.target;
-    return setFormDetails({
+    setFormDetails({
       ...formDetails,
       [name]: value,
     });
   };
 
-  const formSubmit = async (e) => {
-    e.preventDefault();
+  const formSubmit = async () => {
     setLoading(true); // Set loading state to true while making the API call
 
     try {
@@ -87,135 +107,82 @@ function Register() {
     }
   };
 
+  useEffect(() => {
+    if (currentFieldIndex < fields.length && formDetails[fields[currentFieldIndex]] === "") {
+      if (currentFieldIndex === 0) {
+        speakInstructions("first name");
+      } else {
+        speakInstructions(fields[currentFieldIndex]);
+      }
+    }
+  }, [currentFieldIndex, formDetails]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.code === "Space") {
+        // Start voice input when spacebar is pressed
+        if (!allFieldsFilled) {
+          handleVoiceInput();
+        } else {
+          event.preventDefault(); // Prevent default behavior of spacebar
+          formSubmit();
+        }
+      } else if (event.code === "Enter") {
+        // Submit the form when Enter is pressed
+        event.preventDefault(); // Prevent default form submission
+        formSubmit();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleVoiceInput, formSubmit, allFieldsFilled]);
+
+  useEffect(() => {
+    if (transcript.toLowerCase() === "confirm") {
+      formSubmit();
+    }
+  }, [transcript]);
+
+  useEffect(() => {
+    // Check if all fields are filled
+    const isAllFieldsFilled = Object.values(formDetails).every((value) => value !== "");
+    setAllFieldsFilled(isAllFieldsFilled);
+  }, [formDetails]);
+
   return (
     <section className="register-section flex-center">
       <div className="register-container flex-center">
         <h2 className="form-heading">Sign Up</h2>
-        <form onSubmit={formSubmit} className="register-form">
-          <div className="input-container">
-            <input
-              type="text"
-              name="firstname"
-              className="form-input"
-              placeholder="Enter your first name"
-              value={formDetails.firstname}
-              onChange={inputChange}
-            />
-            <button
-              type="button"
-              className="btn voice-btn"
-              onClick={() => handleVoiceInput("firstname")}
-            >
-              Voice
-            </button>
-          </div>
-          <div className="input-container">
-            <input
-              type="text"
-              name="lastname"
-              className="form-input"
-              placeholder="Enter your last name"
-              value={formDetails.lastname}
-              onChange={inputChange}
-            />
-            <button
-              type="button"
-              className="btn voice-btn"
-              onClick={() => handleVoiceInput("lastname")}
-            >
-              Voice
-            </button>
-          </div>
-          <div className="input-container">
-            <input
-              type="userEmail"
-              name="userEmail"
-              className="form-input"
-              placeholder="Enter your userEmail"
-              value={formDetails.userEmail}
-              onChange={inputChange}
-            />
-            <button
-              type="button"
-              className="btn voice-btn"
-              onClick={() => handleVoiceInput("userEmail")}
-            >
-              Voice
-            </button>
-          </div>
-          <div className="input-container">
-            <input
-              type="text"
-              name="userName"
-              className="form-input"
-              placeholder="Enter your userName"
-              value={formDetails.userName}
-              onChange={inputChange}
-            />
-            <button
-              type="button"
-              className="btn voice-btn"
-              onClick={() => handleVoiceInput("userName")}
-            >
-              Voice
-            </button>
-          </div>
-          <div className="input-container">
-            <input
-              type="password"
-              name="password"
-              className="form-input"
-              placeholder="Enter your password"
-              value={formDetails.password}
-              onChange={inputChange}
-            />
-            <button
-              type="button"
-              className="btn voice-btn"
-              onClick={() => handleVoiceInput("password")}
-            >
-              Voice
-            </button>
-          </div>
-          {/* New input fields */}
-          <div className="input-container">
-            <input
-              type="number"
-              name="age"
-              className="form-input"
-              placeholder="Enter your age"
-              value={formDetails.age}
-              onChange={inputChange}
-            />
-            <button
-              type="button"
-              className="btn voice-btn"
-              onClick={() => handleVoiceInput("age")}
-            >
-              Voice
-            </button>
-          </div>
-          <div className="input-container">
-            <input
-              type="text"
-              name="gender"
-              className="form-input"
-              placeholder="Enter your gender"
-              value={formDetails.gender}
-              onChange={inputChange}
-            />
-            <button
-              type="button"
-              className="btn voice-btn"
-              onClick={() => handleVoiceInput("gender")}
-            >
-              Voice
-            </button>
-          </div>
+        <form onSubmit={(e) => e.preventDefault()} className="register-form">
+          {fields.map((field, index) => (
+            <div key={index} className="input-container">
+              <input
+                type="text"
+                name={field}
+                className="form-input"
+                placeholder={`Enter your ${field}`}
+                value={formDetails[field]}
+                onChange={inputChange}
+              />
+              <button
+                type="button"
+                className="btn voice-btn"
+                onClick={() => handleVoiceInput(field)}
+              >
+                Voice
+              </button>
+            </div>
+          ))}
+          
           <button
             type="submit"
             className="btn form-btn"
-            disabled={loading ? true : false}
+            disabled={loading || !isGenderEntered}
+            onClick={formSubmit}
           >
             Sign up
           </button>
