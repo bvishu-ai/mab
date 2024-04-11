@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import "../styles/register.css";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { useSpeechRecognition } from "react-speech-recognition"; // Import useSpeechRecognition
 
 function Login() {
   const [formDetails, setFormDetails] = useState({
@@ -10,6 +11,20 @@ function Login() {
     password: "",
   });
   const navigate = useNavigate();
+
+  const { transcript, resetTranscript } = useSpeechRecognition();
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  const handleVoiceInput = (field) => {
+    resetTranscript();
+    const recognition = new SpeechRecognition();
+    recognition.start();
+    recognition.onresult = (event) => {
+      const voiceInput = event.results[0][0].transcript;
+      setFormDetails({ ...formDetails, [field]: voiceInput });
+      recognition.stop();
+    };
+  };
 
   const inputChange = (e) => {
     const { name, value } = e.target;
@@ -52,22 +67,40 @@ function Login() {
           onSubmit={formSubmit}
           className="register-form"
         >
-          <input
-            type="text"
-            name="email"
-            className="form-input"
-            placeholder="Enter your User Name"
-            value={formDetails.email}
-            onChange={inputChange}
-          />
-          <input
-            type="password"
-            name="password"
-            className="form-input"
-            placeholder="Enter your password"
-            value={formDetails.password}
-            onChange={inputChange}
-          />
+          <div className="input-container">
+            <input
+              type="text"
+              name="email"
+              className="form-input"
+              placeholder="Enter your User Name"
+              value={formDetails.email}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("email")}
+            >
+              Voice
+            </button>
+          </div>
+          <div className="input-container">
+            <input
+              type="password"
+              name="password"
+              className="form-input"
+              placeholder="Enter your password"
+              value={formDetails.password}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("password")}
+            >
+              Voice
+            </button>
+          </div>
           <button
             type="submit"
             className="btn form-btn"

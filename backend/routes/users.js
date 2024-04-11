@@ -64,7 +64,7 @@ router.post("/login", function (req, res) {
           } else {
             if (!pass) {
               console.log("incorrect password");
-              res.status(401).send("Incorrect password");
+              res.status(401).send("incorrect password");
             } else {
               let cookie_val = {
                 reg_no: data.user_name,

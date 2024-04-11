@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios"; // Import Axios
+import { useSpeechRecognition } from "react-speech-recognition"; // Import useSpeechRecognition
 import "../styles/register.css";
 
 function Register() {
@@ -16,6 +17,20 @@ function Register() {
     gender: "", // Add gender field
   });
   const navigate = useNavigate();
+
+  const { transcript, resetTranscript } = useSpeechRecognition();
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  const handleVoiceInput = (field) => {
+    resetTranscript();
+    const recognition = new SpeechRecognition();
+    recognition.start();
+    recognition.onresult = (event) => {
+      const voiceInput = event.results[0][0].transcript;
+      setFormDetails({ ...formDetails, [field]: voiceInput });
+      recognition.stop();
+    };
+  };
 
   const inputChange = (e) => {
     const { name, value } = e.target;
@@ -77,63 +92,126 @@ function Register() {
       <div className="register-container flex-center">
         <h2 className="form-heading">Sign Up</h2>
         <form onSubmit={formSubmit} className="register-form">
-          <input
-            type="text"
-            name="firstname"
-            className="form-input"
-            placeholder="Enter your first name"
-            value={formDetails.firstname}
-            onChange={inputChange}
-          />
-          <input
-            type="text"
-            name="lastname"
-            className="form-input"
-            placeholder="Enter your last name"
-            value={formDetails.lastname}
-            onChange={inputChange}
-          />
-          <input
-            type="userEmail"
-            name="userEmail"
-            className="form-input"
-            placeholder="Enter your userEmail"
-            value={formDetails.userEmail}
-            onChange={inputChange}
-          />
-           <input
-            type="text"
-            name="userName"
-            className="form-input"
-            placeholder="Enter your userName"
-            value={formDetails.userName}
-            onChange={inputChange}
-          />
-          <input
-            type="password"
-            name="password"
-            className="form-input"
-            placeholder="Enter your password"
-            value={formDetails.password}
-            onChange={inputChange}
-          />
+          <div className="input-container">
+            <input
+              type="text"
+              name="firstname"
+              className="form-input"
+              placeholder="Enter your first name"
+              value={formDetails.firstname}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("firstname")}
+            >
+              Voice
+            </button>
+          </div>
+          <div className="input-container">
+            <input
+              type="text"
+              name="lastname"
+              className="form-input"
+              placeholder="Enter your last name"
+              value={formDetails.lastname}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("lastname")}
+            >
+              Voice
+            </button>
+          </div>
+          <div className="input-container">
+            <input
+              type="userEmail"
+              name="userEmail"
+              className="form-input"
+              placeholder="Enter your userEmail"
+              value={formDetails.userEmail}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("userEmail")}
+            >
+              Voice
+            </button>
+          </div>
+          <div className="input-container">
+            <input
+              type="text"
+              name="userName"
+              className="form-input"
+              placeholder="Enter your userName"
+              value={formDetails.userName}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("userName")}
+            >
+              Voice
+            </button>
+          </div>
+          <div className="input-container">
+            <input
+              type="password"
+              name="password"
+              className="form-input"
+              placeholder="Enter your password"
+              value={formDetails.password}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("password")}
+            >
+              Voice
+            </button>
+          </div>
           {/* New input fields */}
-          <input
-            type="number"
-            name="age"
-            className="form-input"
-            placeholder="Enter your age"
-            value={formDetails.age}
-            onChange={inputChange}
-          />
-          <input
-            type="text"
-            name="gender"
-            className="form-input"
-            placeholder="Enter your gender"
-            value={formDetails.gender}
-            onChange={inputChange}
-          />
+          <div className="input-container">
+            <input
+              type="number"
+              name="age"
+              className="form-input"
+              placeholder="Enter your age"
+              value={formDetails.age}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("age")}
+            >
+              Voice
+            </button>
+          </div>
+          <div className="input-container">
+            <input
+              type="text"
+              name="gender"
+              className="form-input"
+              placeholder="Enter your gender"
+              value={formDetails.gender}
+              onChange={inputChange}
+            />
+            <button
+              type="button"
+              className="btn voice-btn"
+              onClick={() => handleVoiceInput("gender")}
+            >
+              Voice
+            </button>
+          </div>
           <button
             type="submit"
             className="btn form-btn"

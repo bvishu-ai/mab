@@ -58,7 +58,7 @@ setTimeout(async () => {
   nlp.addAnswer("en", "greetings.hello", "Hey there!")
   nlp.addAnswer("en", "greetings.hello", "Greetings!")
 
-  nlp.addAnswer("en", "help.request", "Yes, let's get started") // Response for "can you help me" intent
+  nlp.addAnswer("en", "help.request", "Okay, let's get started") // Response for "can you help me" intent
   nlp.addAnswer("en", "help.request", "Sure, let me guide you through it")
 
   await nlp.train()
