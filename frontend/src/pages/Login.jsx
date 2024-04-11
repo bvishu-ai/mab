@@ -10,6 +10,7 @@ function Login() {
     username: "",
     password: "",
   });
+  const [errorMessage, setErrorMessage] = useState(""); // State to store error message
 
   const { transcript, resetTranscript } = useSpeechRecognition();
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -76,22 +77,26 @@ function Login() {
     e.preventDefault();
     const { username, password } = formDetails;
     if (!username || !password) {
-      return toast.error("Input field should not be empty");
+      return setErrorMessage("Input fields should not be empty");
     }
 
     try {
       const response = await axios.post(
         'http://localhost:5000/users/login',
-        JSON.stringify({ user_name: username, password: password}),
+        JSON.stringify({ user_name: username, password: password }),
         {
-            headers: { 'Content-Type': 'application/json' },
-            withCredentials: true,
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
         }
       );
       localStorage.setItem("token", response?.data);
       window.location.href = "/"; // Redirect to home page
     } catch (error) {
-      return toast.error("Failed to sign in. Please check your credentials.");
+      if (error.response && error.response.status === 401) {
+        setErrorMessage("Invalid username or password"); // Set error message
+      } else {
+        setErrorMessage("Failed to sign in. Please check your credentials.");
+      }
     }
   };
 
@@ -99,6 +104,7 @@ function Login() {
     <section className="register-section flex-center">
       <div className="register-container flex-center">
         <h2 className="form-heading">Sign In</h2>
+        {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} {/* Render error message if present */}
         <form onSubmit={formSubmit} className="register-form">
           {fields.map((field, index) => (
             <div key={index} className="input-container">

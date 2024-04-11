@@ -116,3 +116,9 @@ td {
     width: 50vw;
   }
 }
+
+
+.highlight {
+  border: 1px solid red; /* Change border color to red */
+  /* You can add more styles as needed */
+}

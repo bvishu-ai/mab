@@ -23,6 +23,7 @@ router.post("/signup", function (req, res) {
           VALUES ('${data.first_name}', '${data.last_name}', '${data.userEmail}', '${hash}', '${data.user_name}', ${data.age}, '${data.gender}')`,
           (error, result) => {
             if (error) {
+              console.log(error);
               res.status(404).send(error.message);
             } else {
               res.status(200).send("successful");
@@ -47,6 +48,38 @@ router.post("/signup", function (req, res) {
   });
 });
 
+// router.post("/login", function (req, res) {
+//   const data = req.body;
+//   console.log(data);
+//   const yourPassword = data.password;
+//   pool.query(
+//     SELECT (passhash) FROM patients WHERE user_name='${data.user_name}',
+//     (error, result) => {
+//       if (error) {
+//         res.status(404).send(error.message);
+//       } else {
+//         bcrypt.compare(yourPassword, result.rows[0]?.passhash, (err, pass) => {
+//           if (err) {
+//             console.log(err);
+//             res.status(400).send(err.message);
+//           } else {
+//             if (!pass) {
+//               console.log("incorrect password");
+//               res.status(401).send("Incorrect password");
+//             } else {
+//               let cookie_val = {
+//                 reg_no: data.user_name,
+//               };
+//               res.cookie("userCookie", cookie_val);
+//               res.send(data.user_name);
+//             }
+//           }
+//         });
+//       }
+//     }
+//   );
+// });
+
 router.post("/login", function (req, res) {
   const data = req.body;
   console.log(data);
@@ -57,26 +90,31 @@ router.post("/login", function (req, res) {
       if (error) {
         res.status(404).send(error.message);
       } else {
-        bcrypt.compare(yourPassword, result.rows[0]?.passhash, (err, pass) => {
-          if (err) {
-            console.log(err);
-            res.status(400).send(err.message);
-          } else {
-            if (!pass) {
-              console.log("incorrect password");
-              res.status(401).send("incorrect password");
+        if (result.rows.length === 0) { // No user found with the provided user_name
+          res.status(401).send("Invalid user ID"); // Send error message to client
+        } else {
+          bcrypt.compare(yourPassword, result.rows[0]?.passhash, (err, pass) => {
+            if (err) {
+              console.log(err);
+              res.status(400).send(err.message);
             } else {
-              let cookie_val = {
-                reg_no: data.user_name,
-              };
-              res.cookie("userCookie", cookie_val);
-              res.send(data.user_name);
+              if (!pass) {
+                console.log("incorrect password");
+                res.status(401).send("Incorrect password");
+              } else {
+                let cookie_val = {
+                  reg_no: data.user_name,
+                };
+                res.cookie("userCookie", cookie_val);
+                res.send(data.user_name);
+              }
             }
-          }
-        });
+          });
+        }
       }
     }
   );
 });
+
 
 module.exports = router;
