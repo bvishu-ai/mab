@@ -123,7 +123,7 @@ setTimeout(async () => {
     // add "interim" element
     const interimElement = document.createElement("div")
     interimElement.id = "interim"
-    interimElement.style.color = "grey"
+    interimElement.style.color = "white"
     document.body.appendChild(interimElement)
 
     // configure continuous speech recognition
@@ -137,7 +137,7 @@ setTimeout(async () => {
       el("speak").style.display = "none"
       el("send").style.display = "none"
       el("message").disabled = true
-      el("message").placeholder = "Listening..."
+      el("message").placeholder = "listening..."
     }
 
     recognition.onerror = function (event) {
@@ -149,7 +149,7 @@ setTimeout(async () => {
       el("speak").style.display = "inline-block"
       el("send").style.display = "inline-block"
       el("message").disabled = false
-      el("message").placeholder = "Type your message"
+      el("message").placeholder = "enter your query"
       el("interim").innerText = ""
       clearTimeout(timer)
       onMessage()
