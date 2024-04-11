@@ -11,26 +11,26 @@ function Register() {
     lastname: "",
     userEmail: "",
     password: "",
+    confpassword: "",
     userName: "",
     age: "",
     gender: "",
   });
-  const [errorMessages, setErrorMessages] = useState({
+  const [errors, setErrors] = useState({
     firstname: "",
     lastname: "",
     userEmail: "",
     password: "",
+    confpassword: "",
     userName: "",
     age: "",
     gender: "",
   });
-  const [errorMessage, setErrorMessage] = useState(""); // State to store error message
   const navigate = useNavigate();
-
   const { transcript, resetTranscript } = useSpeechRecognition();
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  const fields = ["firstname", "lastname", "userEmail", "password", "userName", "age", "gender"];
+  const fields = ["firstname", "lastname", "userEmail", "password", "confpassword", "userName", "age", "gender"];
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
   const [spokenFields, setSpokenFields] = useState({});
 
@@ -67,10 +67,8 @@ function Register() {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.code === "Space") {
-        // Start voice input when spacebar is pressed
         handleVoiceInput();
       } else if (event.code === "Enter") {
-        // Submit the form when Enter is pressed
         formSubmit(event);
       }
     };
@@ -88,7 +86,13 @@ function Register() {
     }
   }, [transcript, currentFieldIndex]);
 
-  const validateField = (name, value) => {
+  const inputChange = (e) => {
+    const { name, value } = e.target;
+    setFormDetails({
+      ...formDetails,
+      [name]: value,
+    });
+
     let errorMessage = "";
     switch (name) {
       case "firstname":
@@ -102,6 +106,9 @@ function Register() {
       case "password":
         errorMessage = value.length >= 6 ? "" : "Password must be at least 6 characters";
         break;
+      case "confpassword":
+        errorMessage = value === formDetails.password ? "" : "Passwords do not match";
+        break;
       case "age":
         errorMessage = value >= 18 ? "" : "You must be at least 18 years old";
         break;
@@ -111,57 +118,78 @@ function Register() {
       default:
         break;
     }
-    return errorMessage;
+
+    setErrors({
+      ...errors,
+      [name]: errorMessage,
+    });
   };
 
   const formSubmit = async (e) => {
     e.preventDefault();
-    const errors = {};
-    let hasError = false;
 
-    // Validate each field
-    fields.forEach((field) => {
-      const errorMessage = validateField(field, formDetails[field]);
-      errors[field] = errorMessage;
-      if (errorMessage) {
-        hasError = true;
+    const formErrors = {};
+    Object.keys(formDetails).forEach((key) => {
+      switch (key) {
+        case "firstname":
+        case "lastname":
+        case "userName":
+        case "userEmail":
+        case "password":
+        case "confpassword":
+        case "age":
+        case "gender":
+          formErrors[key] = formDetails[key].trim() ? "" : "Field cannot be empty";
+          break;
+        default:
+          break;
       }
     });
-
-    // If any error is found, display error messages and return
-    if (hasError) {
-      setErrorMessages(errors);
-      setErrorMessage("Please fill out all required fields correctly");
+    if (Object.values(formErrors).some((error) => error)) {
+      setErrors(formErrors);
       return;
     }
 
     try {
       const formData = {
-        first_name: formDetails.firstname,
-        last_name: formDetails.lastname,
         userEmail: formDetails.userEmail,
         password: formDetails.password,
-        userName: formDetails.userName,
+        first_name: formDetails.firstname,
+        last_name: formDetails.lastname,
+        account_type: 1,
+        user_name: formDetails.userName,
         age: formDetails.age,
-        gender: formDetails.gender
+        gender: formDetails.gender,
       };
 
-      const response = await axios.post(
-        'http://localhost:5000/users/signup',
-        JSON.stringify(formData),
-        {
-          headers: { 'Content-Type': 'application/json' },
-          withCredentials: true,
-        }
-      );
-      toast.success("Registration successful!");
+      const response = await axios.post("http://localhost:5000/users/signup", formData);
+
+      console.log("Registration successful", response.data);
+
+      setFormDetails({
+        firstname: "",
+        lastname: "",
+        userEmail: "",
+        password: "",
+        confpassword: "",
+        userName: "",
+        age: "",
+        gender: "",
+      });
+      setErrors({
+        firstname: "",
+        lastname: "",
+        userEmail: "",
+        password: "",
+        confpassword: "",
+        userName: "",
+        age: "",
+        gender: "",
+      });
+
       navigate("/login");
     } catch (error) {
-      if (error.response && error.response.status === 401) {
-        setErrorMessage("Invalid registration details"); // Set error message
-      } else {
-        setErrorMessage("Failed to register. Please try again later.");
-      }
+      console.error("Registration failed", error);
     }
   };
 
@@ -174,18 +202,17 @@ function Register() {
         <p></p>
         <p></p>
         <p></p>
-        <h2 className="form-heading">Register</h2>
-        {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} {/* Render error message if present */}
+        <h2 className="form-heading">Sign Up</h2>
         <form onSubmit={formSubmit} className="register-form">
           {fields.map((field, index) => (
             <div key={index} className="input-container">
               <input
-                type="text"
+                type={field === "password" || field === "confpassword" ? "password" : "text"}
                 name={field}
                 className="form-input"
-                placeholder={`enter your ${field}`}
+                placeholder={`Enter your ${field}`}
                 value={formDetails[field]}
-                onChange={(e) => setFormDetails({ ...formDetails, [field]: e.target.value })}
+                onChange={inputChange}
               />
               <button
                 type="button"
@@ -194,25 +221,21 @@ function Register() {
               >
                 Voice
               </button>
-              {errorMessages[field] && <span className="error-message">{errorMessages[field]}</span>}
+              {errors[field] && <span className="error">{errors[field]}</span>}
             </div>
           ))}
-          
           <button type="submit" className="btn form-btn">
-            Register
+            Sign up
           </button>
         </form>
         <p>
-          Already have an account?{" "}
-          <NavLink
-            className="login-link"
-            to={"/login"}
-          >
+          Already a user?{" "}
+          <NavLink className="login-link" to={"/login"}>
             Log in
           </NavLink>
+          <p></p>
+          <p></p>
         </p>
-        <p></p>
-        <p></p>
       </div>
     </section>
   );
