@@ -3,6 +3,7 @@
 .error {
   display: flex;
   flex-direction: column;
+  color:red;
   height: 90vh;
 }
 
