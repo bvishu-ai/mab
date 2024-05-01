@@ -3,8 +3,10 @@ import "../styles/bookappointment.css";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { IoMdClose } from "react-icons/io";
+import { useNavigate } from "react-router-dom";
 
 const BookAppointment = ({ setModalOpen, ele }) => {
+  const navigate = useNavigate();
   const [formDetails, setFormDetails] = useState({
     date: "",
     time: "",
@@ -52,22 +54,10 @@ const BookAppointment = ({ setModalOpen, ele }) => {
 
   const bookAppointment = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
     try {
-      const response = await axios.post(
-        "http://localhost:5000/appointment/bookappointment",
-        {
-          doctorId: ele?._id,
-          user_id: token,
-          department_name: `${ele?.department}`,
-          dayOfBooking: formDetails.dayOfBooking,
-          procedureType: formDetails.procedureType, // Changed to procedureType
-          procedure: formDetails.procedure,
-          month: formDetails.month,
-        }
-      );
-      setModalOpen(false);
-    } catch (error) {
+    navigate("/times");
+    }
+    catch (error) {
       return error;
     }
   };
@@ -136,7 +126,7 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                 className="btn form-btn"
                 onClick={bookAppointment}
               >
-                Book
+                Select TimeSlot
               </button>
             </form>
           </div>

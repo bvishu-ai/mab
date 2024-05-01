@@ -33,6 +33,12 @@ const Navbar = () => {
           <li>
             <NavLink to={"/doctors"}>Doctors</NavLink>
           </li>
+          <li>
+            <NavLink to={"/success"}>Success</NavLink>
+          </li>
+          <li>
+            <NavLink to={"/times"}>TimeSlots</NavLink>
+          </li>
           {!token ? (
             <>
               <li>
