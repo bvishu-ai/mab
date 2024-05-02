@@ -1,6 +1,4 @@
 var express = require("express");
-const bcrypt = require("bcrypt");
-const rounds = 10;
 var router = express.Router();
 
 var pool = require("./pool");
@@ -10,111 +8,68 @@ router.get("/", function (req, res, next) {
   res.send("respond with a resource");
 });
 
-router.post("/signup", function (req, res) {
-  const data = req.body;
-  const account_type = data.account_type || 1; // its 1 for patient
-  const saltRounds = 10;
-  const yourPassword = data.password;
-  bcrypt.genSalt(saltRounds, (err, salt) => {
-    bcrypt.hash(yourPassword, salt, (err, hash) => {
-      if (account_type == 1) {
-        pool.query(
-          `INSERT INTO patients (f_name, l_name, email, passhash, user_name, age, gender) 
-          VALUES ('${data.first_name}', '${data.last_name}', '${data.userEmail}', '${hash}', '${data.user_name}', ${data.age}, '${data.gender}')`,
-          (error, result) => {
-            if (error) {
-              console.log(error);
-              res.status(404).send(error.message);
-            } else {
-              res.status(200).send("successful");
-            }
-          }
-        );
-      } else {
-        console.log(req.body);
-        pool.query(
-          `INSERT INTO doctors (email, passhash) VALUES
-					('${data.userEmail}', '${hash}')`,
-          (error, result) => {
-            if (error) {
-              res.status(404).send(error.message);
-            } else {
-              res.status(200).send("successful");
-            }
-          }
-        );
-      }
-    });
-  });
-});
-
-// router.post("/login", function (req, res) {
-//   const data = req.body;
-//   console.log(data);
-//   const yourPassword = data.password;
-//   pool.query(
-//     SELECT (passhash) FROM patients WHERE user_name='${data.user_name}',
-//     (error, result) => {
-//       if (error) {
-//         res.status(404).send(error.message);
-//       } else {
-//         bcrypt.compare(yourPassword, result.rows[0]?.passhash, (err, pass) => {
-//           if (err) {
-//             console.log(err);
-//             res.status(400).send(err.message);
-//           } else {
-//             if (!pass) {
-//               console.log("incorrect password");
-//               res.status(401).send("Incorrect password");
-//             } else {
-//               let cookie_val = {
-//                 reg_no: data.user_name,
-//               };
-//               res.cookie("userCookie", cookie_val);
-//               res.send(data.user_name);
-//             }
-//           }
-//         });
-//       }
-//     }
-//   );
-// });
-
 router.post("/doctors", function (req, res) {
-  const data = req.body;
-  console.log(data);
-  const yourPassword = data.password;
+  const { department, procedureType } = req.body;
+
   pool.query(
-    `SELECT doctorname FROM availableslots WHERE department='Cardiology'`,
+    `SELECT doctorname FROM availableslots WHERE department=$1 AND proceduretype=$2`,
+    [department, procedureType],
     (error, result) => {
       if (error) {
-        res.status(404).send(error.message);
+        console.error("Error executing query:", error);
+        res.status(500).send("Internal Server Error");
       } else {
-        if (result.rows.length === 0) { // No user found with the provided user_name
-          res.status(401).send("Invalid user ID"); // Send error message to client
+        if (result.rows.length === 0) {
+          res.status(404).send("No doctors found for the selected criteria");
         } else {
-          bcrypt.compare(yourPassword, result.rows[0]?.passhash, (err, pass) => {
-            if (err) {
-              console.log(err);
-              res.status(400).send(err.message);
-            } else {
-              if (!pass) {
-                console.log("incorrect password");
-                res.status(401).send("Incorrect password");
-              } else {
-                let cookie_val = {
-                  reg_no: data.user_name,
-                };
-                res.cookie("userCookie", cookie_val);
-                res.send(data.user_name);
-              }
-            }
-          });
+          const doctorNames = result.rows.map(row => row.doctorname);
+          res.send(doctorNames);
         }
       }
     }
   );
 });
 
+router.post("/time", function (req, res) {
+  const { doctorName } = req.body;
+
+  pool.query(
+    `SELECT timeslot FROM availableslots WHERE doctorname=$1`,
+    [doctorName],
+    (error, result) => {
+      if (error) {
+        console.error("Error executing query:", error);
+        res.status(500).send("Internal Server Error");
+      } else {
+        if (result.rows.length === 0) {
+          res.status(404).send("No available time slots for the selected doctor");
+        } else {
+          const timeSlots = result.rows.map(row => row.timeslot);
+          res.send(timeSlots);
+        }
+      }
+    }
+  );
+});
+
+router.post("/depts", function (req, res) {
+
+  pool.query(
+    `SELECT (UNIQUE)departmentname FROM doctors`,
+    (error, result) => {
+      if (error) {
+        console.error("Error executing query:", error);
+        res.status(500).send("Internal Server Error");
+      } else {
+        if (result.rows.length === 0) {
+          res.status(404).send("No available time slots for the selected doctor");
+        } else {
+          const departs = result.rows.map(row => row.departmentname);
+          res.send(deptarts);
+        }
+      }
+    }
+  );
+});
 
 module.exports = router;

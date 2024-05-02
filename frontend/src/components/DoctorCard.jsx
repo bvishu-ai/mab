@@ -11,6 +11,7 @@ const DoctorCard = ({ ele }) => {
     if (token === "") {
       return toast.error("You must log in first");
     }
+    sessionStorage.setItem('department', ele.department);
     setModalOpen(true);
   };
 

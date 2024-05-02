@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "../styles/bookappointment.css";
-import axios from "axios";
-import toast from "react-hot-toast";
 import { IoMdClose } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 
@@ -35,20 +33,35 @@ const BookAppointment = ({ setModalOpen, ele }) => {
     });
   }, []);
 
-  const inputChange = (e) => {
+  const inputChange1 = (e) => {
     const { name, value } = e.target;
     setFormDetails({
       ...formDetails,
       [name]: value,
     });
+    sessionStorage.setItem('dates', value);
   };
 
+  const inputChange2 = (e) => {
+    const { name, value } = e.target;
+    setFormDetails({
+      ...formDetails,
+      [name]: value,
+    });
+    sessionStorage.setItem('proc', value);
+  };
+  
   const selectProcedureType = (e) => {
     const { value } = e.target;
     setFormDetails({
       ...formDetails,
       procedureType: value,
     });
+    if (value === "consultation") {
+      sessionStorage.setItem('apptype', "Consultation"); // Set appointment type to "Consultation"
+    } else {
+      sessionStorage.setItem('apptype', "Procedure");
+    }
     setShowProcedureField(value === "procedure");
   };
 
@@ -82,7 +95,7 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                 name="date"
                 className="form-input"
                 value={formDetails.date}
-                onChange={inputChange}
+                onChange={inputChange1}
               />
               <br />
               <br />
@@ -110,7 +123,7 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                     <select
                       name="procedure"
                       value={formDetails.procedure}
-                      onChange={inputChange}
+                      onChange={inputChange2}
                     >
                       {ele?.procedures?.map((procedure, index) => (
                         <option key={index} value={procedure}>
